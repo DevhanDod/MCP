@@ -606,29 +606,22 @@ def predict():
         return jsonify({'success': False, 'error': str(e)}), 400
 
 # ============================================================
-# MAIN - Entry Point
+# TRAIN MODEL ON IMPORT (for gunicorn/production)
+# ============================================================
+print("🚀 MCP - Menstrual Cycle Prediction")
+print("=" * 60)
+train_model()
+print("✨ Model ready!")
+print("=" * 60)
+
+# ============================================================
+# MAIN - Entry Point (for local development)
 # ============================================================
 if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5001))
     print()
-    print("=" * 60)
-    print("🚀 MCP - Menstrual Cycle Prediction")
-    print("=" * 60)
-    print()
-    
-    # Train model
-    train_model()
-    
-    print()
-    print("=" * 60)
-    print("✨ Application ready!")
-    print("=" * 60)
-    print()
-    print("🌐 Open your browser and visit:")
-    print("   👉 http://localhost:5001")
-    print()
+    print(f"🌐 Open your browser and visit: http://localhost:{port}")
     print("Press Ctrl+C to stop")
     print("=" * 60)
-    print()
-    
-    # Start server (using port 5001 to avoid macOS AirPlay conflict)
-    app.run(debug=False, host='0.0.0.0', port=5001)
+    app.run(debug=False, host='0.0.0.0', port=port)
