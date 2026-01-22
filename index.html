@@ -6,207 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCP - Menstrual Cycle Prediction</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <link rel="stylesheet" href="static/css/style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #b8b6f3 0%, #e8d5f5 50%, #b8c5f5 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            width: 100%;
-            max-width: 900px;
-        }
-
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 30px;
-        }
-
-        .logo {
-            width: 40px;
-            height: 40px;
-            background: #DC2626;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logo svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1f2937;
-        }
-
-        .subtitle {
-            font-size: 13px;
-            color: #6b7280;
-        }
-
-        h2 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 6px;
-        }
-
-        .form-subtitle {
-            font-size: 14px;
-            color: #9ca3af;
-            margin-bottom: 25px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        @media (max-width: 600px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-
-        .required {
-            color: #DC2626;
-        }
-
-        .form-group input,
-        .form-group select {
-            padding: 12px 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #1f2937;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #DC2626;
-            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #DC2626 0%, #991b1b 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 25px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .submit-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3);
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .footer {
-            margin-top: 30px;
-            text-align: right;
-            font-size: 13px;
-            color: #6b7280;
-        }
-
-        .error {
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            color: #991b1b;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        /* Results section */
-        .results-box {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 40px;
-            margin-top: 25px;
-            display: none;
-        }
-
-        .results-box h2 {
-            margin-bottom: 25px;
-        }
-
-        .result-item {
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .result-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .result-item label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 10px;
-        }
-
-        .result-value {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 14px 20px;
-            font-size: 18px;
-            color: #1f2937;
-            font-weight: 600;
-            display: inline-block;
-            min-width: 200px;
-        }
-
         /* Loading overlay */
         .loading-overlay {
             position: fixed;
@@ -214,7 +15,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -252,151 +53,254 @@
             font-size: 13px;
             color: #9ca3af;
         }
+
+        /* Page visibility */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading">
         <div class="spinner"></div>
         <div class="loading-text">Loading AI Model...</div>
         <div class="loading-subtext" id="loading-status">Initializing Python runtime</div>
     </div>
 
-    <div class="card">
-        <div class="header">
-            <div class="logo">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z" />
-                    <path d="M2 17L12 22L22 17V7L12 12L2 7V17Z" />
-                </svg>
+    <!-- Page 1: Input Form -->
+    <div class="container page active" id="page-form">
+        <div class="card">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo-section">
+                    <div class="logo">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#DC2626" />
+                            <path d="M2 17L12 22L22 17V7L12 12L2 7V17Z" fill="#DC2626" />
+                        </svg>
+                    </div>
+                    <div class="title-section">
+                        <h1>MCP</h1>
+                        <p class="subtitle">Menstrual Cycle Prediction</p>
+                    </div>
+                </div>
+                <button class="logout-btn" id="status-btn" title="Model loading...">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path
+                            d="M6 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V3.33333C2 2.97971 2.14048 2.64057 2.39052 2.39052C2.64057 2.14048 2.97971 2 3.33333 2H6"
+                            stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M10.6667 11.3333L14 8L10.6667 4.66667" stroke="white" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M14 8H6" stroke="white" stroke-width="1.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
             </div>
-            <div>
-                <h1>MCP</h1>
-                <p class="subtitle">Menstrual Cycle Prediction</p>
+
+            <!-- Form Title -->
+            <div class="form-header">
+                <h2>Enter Your Information</h2>
+                <p class="form-subtitle">Fill in the details below to predict your next cycle</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="error" class="error-message" style="display: none;"></div>
+
+            <!-- Form -->
+            <form id="predictionForm">
+                <div class="form-grid">
+                    <!-- Left Column -->
+                    <div class="form-group">
+                        <label for="age">Age <span class="required">*</span></label>
+                        <input type="number" id="age" name="age" placeholder="25" required min="10" max="60">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weight">Weight (kg) <span class="required">*</span></label>
+                        <input type="number" id="weight" name="weight" placeholder="55" required step="0.1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="height">Height (m) <span class="required">*</span></label>
+                        <input type="number" id="height" name="height" placeholder="1.65" required step="0.01">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stress_level">Stress Level</label>
+                        <select id="stress_level" name="stress_level" required>
+                            <option value="1">1 - Very Low</option>
+                            <option value="2">2 - Low</option>
+                            <option value="3">3 - Moderate</option>
+                            <option value="4">4 - Moderate-High</option>
+                            <option value="5" selected>5 - Medium</option>
+                            <option value="6">6 - Medium-High</option>
+                            <option value="7">7 - High</option>
+                            <option value="8">8 - Very High</option>
+                            <option value="9">9 - Extreme</option>
+                            <option value="10">10 - Maximum</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="period_length">Period Length</label>
+                        <select id="period_length" name="period_length" required>
+                            <option value="3">3 days</option>
+                            <option value="4">4 days</option>
+                            <option value="5" selected>5 days</option>
+                            <option value="6">6 days</option>
+                            <option value="7">7 days</option>
+                        </select>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="form-group">
+                        <label for="cycle_length">Cycle Length</label>
+                        <select id="cycle_length" name="cycle_length" required>
+                            <option value="21">21 days</option>
+                            <option value="24">24 days</option>
+                            <option value="26">26 days</option>
+                            <option value="28" selected>28 days</option>
+                            <option value="30">30 days</option>
+                            <option value="32">32 days</option>
+                            <option value="35">35 days</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="exercise_frequency">Exercise Frequency</label>
+                        <select id="exercise_frequency" name="exercise_frequency" required>
+                            <option value="none">None</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="daily" selected>Daily</option>
+                            <option value="occasionally">Occasionally</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="symptoms">Symptoms</label>
+                        <select id="symptoms" name="symptoms" required>
+                            <option value="none" selected>None</option>
+                            <option value="headache">Headache</option>
+                            <option value="cramps">Cramps</option>
+                            <option value="bloating">Bloating</option>
+                            <option value="fatigue">Fatigue</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="diet">Diet</label>
+                        <select id="diet" name="diet" required>
+                            <option value="balanced" selected>Balanced</option>
+                            <option value="vegan">Vegan</option>
+                            <option value="keto">Keto</option>
+                            <option value="irregular">Irregular</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cycle_start_date">Cycle Start Date <span class="required">*</span></label>
+                        <input type="date" id="cycle_start_date" name="cycle_start_date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sleep_hours">Sleep Hours</label>
+                        <input type="number" id="sleep_hours" name="sleep_hours" placeholder="7" value="7" required
+                            step="0.5" min="0" max="24">
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn" disabled>Loading AI Model...</button>
+            </form>
+
+            <!-- Footer -->
+            <div class="footer">
+                <p>Devhan (20221394 - w1956126)</p>
             </div>
         </div>
+    </div>
 
-        <h2>Enter Your Information</h2>
-        <p class="form-subtitle">Fill in the details below to predict your next cycle</p>
+    <!-- Page 2: Results -->
+    <div class="container page" id="page-results">
+        <div class="card">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo-section">
+                    <div class="logo">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#DC2626" />
+                            <path d="M2 17L12 22L22 17V7L12 12L2 7V17Z" fill="#DC2626" />
+                        </svg>
+                    </div>
+                    <div class="title-section">
+                        <h1>MCP</h1>
+                        <p class="subtitle">Menstrual Cycle Prediction</p>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="goBack()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 2L14 8L10 14" stroke="white" stroke-width="1.5" stroke-linecap="round"
+                            stroke-linejoin="round" transform="rotate(180 8 8)" />
+                        <path d="M2 8H14" stroke="white" stroke-width="1.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
 
-        <div id="error" class="error"></div>
+            <!-- Form Title -->
+            <div class="form-header">
+                <h2>Prediction Results</h2>
+                <p class="form-subtitle">Based on your input data and our AI model</p>
+            </div>
 
-        <form id="form">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Age <span class="required">*</span></label>
-                    <input type="number" id="age" required min="10" max="60" placeholder="25">
+            <!-- Results Display -->
+            <div class="results-container">
+                <div class="result-item">
+                    <label>Your BMI:</label>
+                    <div class="result-value" id="bmi-value">--</div>
                 </div>
-                <div class="form-group">
-                    <label>Cycle Length (days)</label>
-                    <select id="cycle_length" required>
-                        <option value="21">21 days</option>
-                        <option value="24">24 days</option>
-                        <option value="26">26 days</option>
-                        <option value="28" selected>28 days</option>
-                        <option value="30">30 days</option>
-                        <option value="32">32 days</option>
-                        <option value="35">35 days</option>
-                    </select>
+
+                <div class="result-item">
+                    <label>Your Next Cycle:</label>
+                    <div class="result-value" id="next-cycle">--</div>
                 </div>
-                <div class="form-group">
-                    <label>Weight (kg) <span class="required">*</span></label>
-                    <input type="number" id="weight" required step="0.1" placeholder="55">
-                </div>
-                <div class="form-group">
-                    <label>Exercise Frequency</label>
-                    <select id="exercise" required>
-                        <option value="none">None</option>
-                        <option value="occasionally">Occasionally</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="daily" selected>Daily</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Height (m) <span class="required">*</span></label>
-                    <input type="number" id="height" required step="0.01" placeholder="1.65">
-                </div>
-                <div class="form-group">
-                    <label>Symptoms</label>
-                    <select id="symptoms" required>
-                        <option value="none" selected>None</option>
-                        <option value="cramps">Cramps</option>
-                        <option value="headache">Headache</option>
-                        <option value="bloating">Bloating</option>
-                        <option value="fatigue">Fatigue</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Stress Level (1-10)</label>
-                    <select id="stress" required>
-                        <option value="1">1 - Very Low</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5" selected>5 - Medium</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="10">10 - Very High</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Diet</label>
-                    <select id="diet" required>
-                        <option value="balanced" selected>Balanced</option>
-                        <option value="vegan">Vegan</option>
-                        <option value="keto">Keto</option>
-                        <option value="irregular">Irregular</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Period Length (days)</label>
-                    <select id="period_length" required>
-                        <option value="3">3 days</option>
-                        <option value="4">4 days</option>
-                        <option value="5" selected>5 days</option>
-                        <option value="6">6 days</option>
-                        <option value="7">7 days</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Sleep Hours</label>
-                    <input type="number" id="sleep" required step="0.5" min="0" max="24" value="7">
-                </div>
-                <div class="form-group" style="grid-column: span 2;">
-                    <label>Cycle Start Date <span class="required">*</span></label>
-                    <input type="date" id="start_date" required>
+
+                <div class="result-item">
+                    <label>Model Accuracy:</label>
+                    <div class="result-value" id="accuracy">--</div>
                 </div>
             </div>
-            <button type="submit" class="submit-btn" id="submit-btn" disabled>Loading AI Model...</button>
-        </form>
 
-        <div id="results" class="results-box">
-            <h2>Prediction Results</h2>
-            <div class="result-item">
-                <label>Your BMI:</label>
-                <div class="result-value" id="r-bmi">--</div>
-            </div>
-            <div class="result-item">
-                <label>Your Next Cycle:</label>
-                <div class="result-value" id="r-date">--</div>
-            </div>
-            <div class="result-item">
-                <label>Accuracy:</label>
-                <div class="result-value" id="r-acc">--</div>
+            <!-- Footer -->
+            <div class="footer">
+                <p>Devhan (20221394 - w1956126)</p>
             </div>
         </div>
-
-        <div class="footer">Devhan (20221394 - w1956126)</div>
     </div>
 
     <script>
         let pyodide = null;
         let modelReady = false;
 
-        document.getElementById('start_date').max = new Date().toISOString().split('T')[0];
+        // Set max date to today
+        document.getElementById('cycle_start_date').max = new Date().toISOString().split('T')[0];
 
+        // Page navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function goBack() {
+            showPage('page-form');
+        }
+
+        // Initialize Pyodide
         async function initPyodide() {
             const loadingStatus = document.getElementById('loading-status');
 
@@ -504,6 +408,8 @@ def predict(age, bmi, stress, sleep, cycle_len, period_len, exercise, diet, symp
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('submit-btn').disabled = false;
                 document.getElementById('submit-btn').textContent = 'Predict Next Cycle';
+                document.getElementById('status-btn').title = 'Model ready!';
+                document.getElementById('status-btn').style.background = '#059669';
 
             } catch (error) {
                 document.getElementById('loading-status').textContent = 'Error: ' + error.message;
@@ -513,7 +419,8 @@ def predict(age, bmi, stress, sleep, cycle_len, period_len, exercise, diet, symp
 
         initPyodide();
 
-        document.getElementById('form').addEventListener('submit', async (e) => {
+        // Form submission
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             if (!modelReady) {
@@ -525,7 +432,6 @@ def predict(age, bmi, stress, sleep, cycle_len, period_len, exercise, diet, symp
             btn.disabled = true;
             btn.textContent = 'Processing...';
             document.getElementById('error').style.display = 'none';
-            document.getElementById('results').style.display = 'none';
 
             try {
                 const weight = parseFloat(document.getElementById('weight').value);
@@ -533,11 +439,11 @@ def predict(age, bmi, stress, sleep, cycle_len, period_len, exercise, diet, symp
                 const bmi = (weight / (height * height)).toFixed(2);
 
                 const age = parseInt(document.getElementById('age').value);
-                const stress = parseInt(document.getElementById('stress').value);
-                const sleep = parseFloat(document.getElementById('sleep').value);
+                const stress = parseInt(document.getElementById('stress_level').value);
+                const sleep = parseFloat(document.getElementById('sleep_hours').value);
                 const cycleLen = parseInt(document.getElementById('cycle_length').value);
                 const periodLen = parseInt(document.getElementById('period_length').value);
-                const exercise = document.getElementById('exercise').value;
+                const exercise = document.getElementById('exercise_frequency').value;
                 const diet = document.getElementById('diet').value;
                 const symptoms = document.getElementById('symptoms').value;
 
@@ -547,16 +453,19 @@ predict(${age}, ${bmi}, ${stress}, ${sleep}, ${cycleLen}, ${periodLen}, "${exerc
 
                 const accuracy = await pyodide.runPythonAsync(`model_accuracy`);
 
-                const startDate = new Date(document.getElementById('start_date').value);
+                const startDate = new Date(document.getElementById('cycle_start_date').value);
                 const nextDate = new Date(startDate);
                 nextDate.setDate(nextDate.getDate() + Math.round(predDays));
 
-                document.getElementById('r-bmi').textContent = bmi;
-                document.getElementById('r-date').textContent = nextDate.toLocaleDateString('en-US', {
+                // Update results page
+                document.getElementById('bmi-value').textContent = bmi;
+                document.getElementById('next-cycle').textContent = nextDate.toLocaleDateString('en-US', {
                     year: 'numeric', month: 'long', day: 'numeric'
                 });
-                document.getElementById('r-acc').textContent = accuracy.toFixed(1) + '%';
-                document.getElementById('results').style.display = 'block';
+                document.getElementById('accuracy').textContent = accuracy.toFixed(1) + '%';
+
+                // Navigate to results page
+                showPage('page-results');
 
             } catch (error) {
                 document.getElementById('error').textContent = 'Error: ' + error.message;
