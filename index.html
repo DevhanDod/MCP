@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP - Menstrual Cycle Prediction</title>
+    <meta name="description" content="AI-powered menstrual cycle prediction using machine learning">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.25);
+            padding: 48px;
+            width: 100%;
+            max-width: 900px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+        .logo {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #DC2626 0%, #991b1b 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(220,38,38,0.35);
+        }
+        .logo svg { width: 32px; height: 32px; fill: white; }
+        h1 { font-size: 32px; font-weight: 700; color: #1f2937; letter-spacing: -0.5px; }
+        .subtitle { font-size: 14px; color: #6b7280; margin-top: 4px; }
+        h2 { font-size: 22px; font-weight: 600; color: #1f2937; margin-bottom: 8px; }
+        .form-subtitle { font-size: 15px; color: #9ca3af; margin-bottom: 28px; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        .required { color: #DC2626; }
+        .form-group input, .form-group select {
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #1f2937;
+            background: white;
+            transition: all 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #DC2626;
+            box-shadow: 0 0 0 4px rgba(220,38,38,0.1);
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #DC2626 0%, #991b1b 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 28px;
+            transition: all 0.3s;
+            box-shadow: 0 8px 24px rgba(220,38,38,0.35);
+        }
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(220,38,38,0.45);
+        }
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .footer {
+            margin-top: 32px;
+            text-align: center;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            color: white;
+        }
+        .loading-overlay.hidden { display: none; }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #DC2626;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+        .loading-subtext { font-size: 14px; color: #9ca3af; }
+        .result-box { 
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 2px solid #34d399; 
+            padding: 28px; 
+            border-radius: 16px; 
+            margin-top: 28px; 
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .result-box h3 { color: #065f46; margin-bottom: 20px; font-size: 20px; }
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        @media (max-width: 500px) { .result-grid { grid-template-columns: 1fr; } }
+        .result-item { 
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .result-label { color: #059669; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+        .result-value { font-weight: 700; color: #065f46; font-size: 18px; }
+        .error-box {
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+            border: 2px solid #f87171;
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #ecfdf5;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #059669;
+            margin-bottom: 28px;
+        }
+        .status-badge.loading {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: currentColor;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading AI Model...</div>
+        <div class="loading-subtext" id="loading-status">Initializing Python runtime</div>
+    </div>
+
+    <div class="card">
+        <div class="header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7L12 12L22 7L12 2Z"/><path d="M2 17L12 22L22 17V7L12 12L2 7V17Z"/></svg>
+            </div>
+            <div>
+                <h1>MCP</h1>
+                <p class="subtitle">Menstrual Cycle Prediction • Powered by AI</p>
+            </div>
+        </div>
+
+        <div class="status-badge loading" id="status-badge">
+            <div class="status-dot"></div>
+            <span id="status-text">Loading model...</span>
+        </div>
+        
+        <h2>Enter Your Information</h2>
+        <p class="form-subtitle">Fill in the details below to predict your next cycle</p>
+        
+        <div id="error" class="error-box"></div>
+        
+        <form id="form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Age <span class="required">*</span></label>
+                    <input type="number" id="age" required min="10" max="60" placeholder="25">
+                </div>
+                <div class="form-group">
+                    <label>Cycle Length (days)</label>
+                    <select id="cycle_length" required>
+                        <option value="21">21 days</option>
+                        <option value="24">24 days</option>
+                        <option value="26">26 days</option>
+                        <option value="28" selected>28 days</option>
+                        <option value="30">30 days</option>
+                        <option value="32">32 days</option>
+                        <option value="35">35 days</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Weight (kg) <span class="required">*</span></label>
+                    <input type="number" id="weight" required step="0.1" placeholder="55">
+                </div>
+                <div class="form-group">
+                    <label>Exercise Frequency</label>
+                    <select id="exercise" required>
+                        <option value="none">None</option>
+                        <option value="occasionally">Occasionally</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="daily" selected>Daily</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Height (m) <span class="required">*</span></label>
+                    <input type="number" id="height" required step="0.01" placeholder="1.65">
+                </div>
+                <div class="form-group">
+                    <label>Symptoms</label>
+                    <select id="symptoms" required>
+                        <option value="none" selected>None</option>
+                        <option value="cramps">Cramps</option>
+                        <option value="headache">Headache</option>
+                        <option value="bloating">Bloating</option>
+                        <option value="fatigue">Fatigue</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Stress Level (1-10)</label>
+                    <select id="stress" required>
+                        <option value="1">1 - Very Low</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5" selected>5 - Medium</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10 - Very High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Diet</label>
+                    <select id="diet" required>
+                        <option value="balanced" selected>Balanced</option>
+                        <option value="vegan">Vegan</option>
+                        <option value="keto">Keto</option>
+                        <option value="irregular">Irregular</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Period Length (days)</label>
+                    <select id="period_length" required>
+                        <option value="3">3 days</option>
+                        <option value="4">4 days</option>
+                        <option value="5" selected>5 days</option>
+                        <option value="6">6 days</option>
+                        <option value="7">7 days</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Sleep Hours</label>
+                    <input type="number" id="sleep" required step="0.5" min="0" max="24" value="7">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Cycle Start Date <span class="required">*</span></label>
+                    <input type="date" id="start_date" required>
+                </div>
+            </div>
+            <button type="submit" class="submit-btn" id="submit-btn" disabled>Loading AI Model...</button>
+        </form>
+        
+        <div id="result" class="result-box">
+            <h3>🎯 Prediction Results</h3>
+            <div class="result-grid">
+                <div class="result-item">
+                    <div class="result-label">Your BMI</div>
+                    <div class="result-value" id="r-bmi">--</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Days Until Next Period</div>
+                    <div class="result-value" id="r-days">--</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Predicted Date</div>
+                    <div class="result-value" id="r-date">--</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Model Accuracy</div>
+                    <div class="result-value" id="r-acc">--</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Devhan Dodampahala (20221394 - w1956126)</p>
+            <p style="margin-top: 8px; font-size: 12px; color: #9ca3af;">Runs entirely in your browser • No data sent to servers</p>
+        </div>
+    </div>
+
+    <script>
+        let pyodide = null;
+        let modelReady = false;
+
+        // Set max date to today
+        document.getElementById('start_date').max = new Date().toISOString().split('T')[0];
+
+        async function initPyodide() {
+            const loadingStatus = document.getElementById('loading-status');
+            
+            try {
+                loadingStatus.textContent = 'Loading Python runtime (~5MB)...';
+                pyodide = await loadPyodide();
+                
+                loadingStatus.textContent = 'Installing numpy...';
+                await pyodide.loadPackage('numpy');
+                
+                loadingStatus.textContent = 'Installing pandas...';
+                await pyodide.loadPackage('pandas');
+                
+                loadingStatus.textContent = 'Installing scikit-learn (~15MB)...';
+                await pyodide.loadPackage('scikit-learn');
+                
+                loadingStatus.textContent = 'Training ML model...';
+                
+                // Define and train the model
+                await pyodide.runPythonAsync(`
+import numpy as np
+import pandas as pd
+from sklearn.neural_network import MLPRegressor
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
+
+# Generate training data
+np.random.seed(42)
+n_samples = 500
+
+data = {
+    'Age': np.random.randint(18, 45, n_samples),
+    'BMI': np.round(np.random.uniform(18, 35, n_samples), 1),
+    'Stress Level': np.random.randint(1, 11, n_samples),
+    'Sleep Hours': np.round(np.random.uniform(4, 10, n_samples), 1),
+    'Cycle Length': np.random.choice([21, 24, 26, 28, 30, 32, 35], n_samples, 
+                                     p=[0.05, 0.1, 0.15, 0.4, 0.15, 0.1, 0.05]),
+    'Period Length': np.random.choice([3, 4, 5, 6, 7], n_samples,
+                                      p=[0.1, 0.25, 0.35, 0.2, 0.1]),
+    'Exercise Frequency': np.random.choice(['none', 'weekly', 'daily', 'occasionally'], n_samples,
+                                           p=[0.2, 0.3, 0.25, 0.25]),
+    'Diet': np.random.choice(['balanced', 'vegan', 'keto', 'irregular'], n_samples,
+                             p=[0.4, 0.2, 0.15, 0.25]),
+    'Symptoms': np.random.choice(['none', 'cramps', 'headache', 'bloating', 'fatigue'], n_samples,
+                                 p=[0.3, 0.25, 0.15, 0.15, 0.15])
+}
+
+base_days = data['Cycle Length'] - data['Period Length']
+variation = (data['Stress Level'] - 5) * 0.5 + (7 - data['Sleep Hours']) * 0.3
+noise = np.random.normal(0, 1, n_samples)
+data['days_until_next_period'] = np.maximum(1, base_days + variation + noise).astype(int)
+
+df = pd.DataFrame(data)
+
+# Prepare features
+num_cols = ['Age', 'BMI', 'Stress Level', 'Sleep Hours', 'Cycle Length', 'Period Length']
+cat_cols = ['Exercise Frequency', 'Diet', 'Symptoms']
+
+X = df[num_cols + cat_cols]
+y = df['days_until_next_period']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Build pipeline
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', StandardScaler(), num_cols),
+        ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)
+    ]
+)
+
+model = Pipeline([
+    ('preprocessor', preprocessor),
+    ('regressor', MLPRegressor(
+        hidden_layer_sizes=(32, 16),
+        activation='relu',
+        max_iter=500,
+        random_state=42,
+        early_stopping=True,
+        validation_fraction=0.2
+    ))
+])
+
+model.fit(X_train, y_train)
+
+# Calculate accuracy
+y_pred = model.predict(X_test)
+mae = np.mean(np.abs(y_test - y_pred))
+model_accuracy = max(0, 100 - (mae / np.mean(y_test) * 100))
+
+def predict(age, bmi, stress, sleep, cycle_len, period_len, exercise, diet, symptoms):
+    X_one = pd.DataFrame([{
+        'Age': age,
+        'BMI': bmi,
+        'Stress Level': stress,
+        'Sleep Hours': sleep,
+        'Cycle Length': cycle_len,
+        'Period Length': period_len,
+        'Exercise Frequency': exercise.lower(),
+        'Diet': diet.lower(),
+        'Symptoms': symptoms.lower()
+    }])
+    pred = float(model.predict(X_one)[0])
+    return max(1, pred)
+                `);
+                
+                modelReady = true;
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('submit-btn').textContent = 'Predict Next Cycle';
+                
+                // Update status badge
+                const badge = document.getElementById('status-badge');
+                badge.classList.remove('loading');
+                document.getElementById('status-text').textContent = 'Model ready • Running in browser';
+                
+            } catch (error) {
+                document.getElementById('loading-status').textContent = 'Error: ' + error.message;
+                console.error(error);
+            }
+        }
+
+        // Initialize on load
+        initPyodide();
+
+        // Form submission
+        document.getElementById('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!modelReady) {
+                alert('Please wait for the model to load');
+                return;
+            }
+            
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Predicting...';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('result').style.display = 'none';
+            
+            try {
+                const weight = parseFloat(document.getElementById('weight').value);
+                const height = parseFloat(document.getElementById('height').value);
+                const bmi = (weight / (height * height)).toFixed(2);
+                
+                const age = parseInt(document.getElementById('age').value);
+                const stress = parseInt(document.getElementById('stress').value);
+                const sleep = parseFloat(document.getElementById('sleep').value);
+                const cycleLen = parseInt(document.getElementById('cycle_length').value);
+                const periodLen = parseInt(document.getElementById('period_length').value);
+                const exercise = document.getElementById('exercise').value;
+                const diet = document.getElementById('diet').value;
+                const symptoms = document.getElementById('symptoms').value;
+                
+                // Run prediction
+                const predDays = await pyodide.runPythonAsync(`
+predict(${age}, ${bmi}, ${stress}, ${sleep}, ${cycleLen}, ${periodLen}, "${exercise}", "${diet}", "${symptoms}")
+                `);
+                
+                const accuracy = await pyodide.runPythonAsync(`model_accuracy`);
+                
+                // Calculate next date
+                const startDate = new Date(document.getElementById('start_date').value);
+                const nextDate = new Date(startDate);
+                nextDate.setDate(nextDate.getDate() + Math.round(predDays));
+                
+                // Display results
+                document.getElementById('r-bmi').textContent = bmi;
+                document.getElementById('r-days').textContent = Math.round(predDays) + ' days';
+                document.getElementById('r-date').textContent = nextDate.toLocaleDateString('en-US', { 
+                    year: 'numeric', month: 'long', day: 'numeric' 
+                });
+                document.getElementById('r-acc').textContent = accuracy.toFixed(1) + '%';
+                document.getElementById('result').style.display = 'block';
+                
+            } catch (error) {
+                document.getElementById('error').textContent = 'Error: ' + error.message;
+                document.getElementById('error').style.display = 'block';
+                console.error(error);
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Predict Next Cycle';
+        });
+    </script>
+</body>
+</html>
