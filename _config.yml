@@ -1,0 +1,20 @@
+# Jekyll configuration
+# Exclude folders that are not part of the site
+exclude:
+  - venv
+  - .venv
+  - bin
+  - lib
+  - include
+  - __pycache__
+  - pyproject.toml
+  - uv.lock
+  - requirements.txt
+  - .python-version
+  - .github
+  - model.py
+  - main.py
+  - app.py
+  - train_model.py
+  - start.py
+  - run.sh
