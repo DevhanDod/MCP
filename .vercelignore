@@ -1,7 +1,0 @@
-# Skip uv.lock to avoid installing heavy dev dependencies
-uv.lock
-.python-version
-venv/
-.venv/
-__pycache__/
-*.pyc
