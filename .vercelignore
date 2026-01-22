@@ -1,5 +1,5 @@
+# Skip uv.lock to avoid installing heavy dev dependencies
 uv.lock
-pyproject.toml
 .python-version
 venv/
 .venv/

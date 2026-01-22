@@ -1,14 +1,22 @@
 [project]
 name = "mcp"
 version = "0.1.0"
-description = "Add your description here"
+description = "Menstrual Cycle Prediction Application"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.9"
+
+# Production dependencies (lightweight - no TensorFlow)
 dependencies = [
     "flask==3.0.0",
-    "kagglehub==0.2.5",
     "numpy==1.26.2",
     "pandas==2.1.4",
     "scikit-learn==1.3.2",
+    "gunicorn==21.2.0",
+]
+
+# Optional dev dependencies (heavy stuff for local development)
+[project.optional-dependencies]
+dev = [
     "tensorflow>=2.18.1",
+    "kagglehub==0.2.5",
 ]
